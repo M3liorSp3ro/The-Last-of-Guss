@@ -1,79 +1,95 @@
-import { getRound, tapGoose, type RoundDetails } from '@/shared/api/rounds';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    tapGoose,
+} from '@/shared/api/rounds';
+import { TapResponse } from '@/shared/types/rounds';
+import { useMutation } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useRound } from '../hooks';
+import { getStatusTitle } from '../utils';
 import styles from './RoundPage.module.scss';
-
-function formatDiff(ms: number) {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
-    const seconds = String(totalSeconds % 60).padStart(2, '0');
-    return `${minutes}:${seconds}`;
-}
-
-function useTimer(round?: RoundDetails) {
-    const [now, setNow] = useState(() => Date.now());
-
-    useEffect(() => {
-        const id = setInterval(() => setNow(Date.now()), 1000);
-        return () => clearInterval(id);
-    }, []);
-
-    if (!round) return { label: '', value: '' };
-
-    const start = new Date(round.startTime).getTime();
-    const end = new Date(round.endTime).getTime();
-
-    if (round.status === 'active') {
-        const diff = Math.max(0, end - now);
-        return { label: 'До конца осталось', value: formatDiff(diff) };
-    }
-
-    if (round.status === 'cooldown' || round.status === 'scheduled') {
-        const diff = Math.max(0, start - now);
-        return { label: 'до начала раунда', value: formatDiff(diff) };
-    }
-
-    return { label: '', value: '' };
-}
 
 export function RoundPage() {
     const { id } = useParams<{ id: string }>();
-    const qc = useQueryClient();
 
-    const { data: round } = useQuery({
-        queryKey: ['round', id],
-        queryFn: () => getRound(id!),
-        refetchInterval: 1000,
-        enabled: Boolean(id),
-    });
+    const [localScore, setLocalScore] = useState(0);
+    const [finishRefetched, setFinishRefetched] = useState(false);
 
-    const tapMutation = useMutation({
-        mutationFn: () => tapGoose(id!),
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['round', id] });
+    if (!id) {
+        return <div className={styles.container}>Не передан id раунда</div>;
+    }
+
+    const {
+        round,
+        isPending: roundPending,
+        isError: roundError,
+        clientStatus,
+        timer,
+        refetch,
+    } = useRound(id);
+
+
+    const isFinished = clientStatus === 'finished';
+    const isActive = clientStatus === 'active';
+    const isCooldown = clientStatus === 'cooldown';
+
+
+
+    const { mutate: tapMutation, isError: tapError } = useMutation<TapResponse>({
+        mutationFn: () => tapGoose(id),
+        onSuccess: (data) => {
+            // серверный результат подравниваем локальные значения
+            setLocalScore(data.score);
         },
     });
 
-    const timer = useTimer(round);
-    const canTap = round?.status === 'active' && !tapMutation.isPending;
+    // клики разрещены, пока раунд активен
+    const canTap = Boolean(isActive);
 
     const handleTap = () => {
         if (!canTap) return;
-        tapMutation.mutate();
+
+        setLocalScore((prev) => prev + 1);
+
+        tapMutation();
     };
 
-    if (!round) {
+    // при первом получении раунда синхронизируем локальные очки
+    useEffect(() => {
+        if (round) {
+            setLocalScore(round.myScore);
+        }
+    }, [round]);
+
+    // когда раунд впервые стал finished один раз подтягиваем финальную статистику
+    useEffect(() => {
+        if (!round) return;
+        if (!isFinished) {
+            setFinishRefetched(false);
+            return;
+        }
+        if (finishRefetched) return;
+
+        setFinishRefetched(true);
+        refetch(); // подтягиваем totalScore, winner и тд
+    }, [isFinished, finishRefetched, refetch, round]);
+
+    if (roundPending || !round) {
         return <div className={styles.container}>Загрузка…</div>;
     }
 
-    const isFinished = round.status === 'finished';
+    if (roundError) {
+        return <div className={styles.container}>Не удалось загрузить раунд</div>;
+    }
 
     return (
         <div className={styles.container}>
+            <div className={styles.header}>
+                <span>{getStatusTitle(clientStatus)}</span>
+            </div>
+
             <div className={styles.content}>
-                {/* Левая карточка с гусём */}
                 <div className={styles.gooseCard}>
                     <div
                         className={clsx(
@@ -85,37 +101,50 @@ export function RoundPage() {
                         {canTap ? 'Тапни по гусю!' : 'Гусь недоступен'}
                     </div>
 
-                    {!isFinished && (
+                    {/* === ACTIVE === */}
+                    {isActive && (
                         <>
+                            <div className={styles.statsRow}>Раунд активен!</div>
                             <div className={styles.statsRow}>
-                                {round.status === 'active' ? 'Раунд активен!' : 'Cooldown'}
+                                {timer.label}: {timer.value}
                             </div>
-                            {timer.label && (
-                                <div className={styles.statsRow}>
-                                    {timer.label}: {timer.value}
-                                </div>
-                            )}
-                            <div className={styles.statsRow}>Мои очки - {round.myPoints}</div>
+                            <div className={styles.statsRow}>
+                                Мои очки - {localScore}
+                            </div>
                         </>
                     )}
 
+                    {/* === COOLDOWN === */}
+                    {isCooldown && (
+                        <>
+                            <div className={styles.statsRow}>Cooldown</div>
+                            <div className={styles.statsRow}>
+                                {timer.label} {timer.value}
+                            </div>
+                        </>
+                    )}
+
+                    {/* === FINISHED === */}
                     {isFinished && (
                         <>
                             <hr style={{ margin: '12px 0' }} />
-                            <div className={styles.statsRow}>Всего {round.totalPoints}</div>
                             <div className={styles.statsRow}>
-                                Победитель - {round.winnerName} {round.winnerPoints}
+                                Всего&nbsp; {round.totalScore}
                             </div>
-                            <div className={styles.statsRow}>Мои очки {round.myPoints}</div>
+                            {round.winnerName && (
+                                <div className={styles.statsRow}>
+                                    Победитель - {round.winnerName}&nbsp; {round.winnerScore}
+                                </div>
+                            )}
+                            <div className={styles.statsRow}>
+                                Мои очки&nbsp; {localScore}
+                            </div>
                         </>
                     )}
-                </div>
 
-                {/* Правая колонка с подсказками, как на мокапе */}
-                <div className={styles.rightText}>
-                    <p>← состояние раунда меняется, когда приходит время</p>
-                    <p>← счетчик времени, обновляется раз в секунду</p>
-                    <p>← мои очки обновляются при каждом тапе</p>
+                    {tapError && (
+                        <div className={styles.error}>Не удалось отправить тап</div>
+                    )}
                 </div>
             </div>
         </div>

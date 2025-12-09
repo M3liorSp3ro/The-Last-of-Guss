@@ -1,52 +1,95 @@
+import { useState } from 'react';
+
 import { useAuth } from '@/app/providers/AuthProvider';
 import { RoundCard } from '@/entities/RoundCard';
-import { createRound, getRounds } from '@/shared/api/rounds';
 import { Button } from '@/shared/ui/Button/Button';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+
+import { STATUS_OPTIONS } from '../consts';
+import type { StatusFilter } from '../types';
+
+import { useCreateRound, useRoundsList } from '../hooks';
 import styles from './RoundsListPage.module.scss';
 
 export function RoundsListPage() {
-    const { data, isLoading, error } = useQuery({
-        queryKey: ['rounds'],
-        queryFn: getRounds,
-        refetchInterval: 5000,
-    });
-
     const { user } = useAuth();
-    const qc = useQueryClient();
-    const navigate = useNavigate();
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
-    const createMutation = useMutation({
-        mutationFn: createRound,
-        onSuccess: (round) => {
-            qc.invalidateQueries({ queryKey: ['rounds'] });
-            navigate(`/rounds/${round.id}`);
-        },
-    });
+    const {
+        rounds,
+        isPending: roundsPending,
+        isError: roundsError,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useRoundsList(statusFilter);
+
+    const { create, isPending: createPending } = useCreateRound();
 
     return (
         <div className={styles.container}>
-            {user?.isAdmin && (
-                <div className={styles.createWrapper}>
-                    <Button
-                        variant="primary"
-                        onClick={() => createMutation.mutate()}
-                        disabled={createMutation.isPending}
+            <div className={styles.header}>
+                <span>Список РАУНДОВ</span>
+                <span className={styles.headerRight}>
+                    {user && (
+                        <span>
+                            Имя игрока: <b>{user.username}</b>
+                        </span>
+                    )}
+                    {user?.isAdmin && (
+                        <Button
+                            variant="primary"
+                            onClick={create}
+                            disabled={createPending}
+                        >
+                            Создать раунд
+                        </Button>
+                    )}
+                </span>
+            </div>
+
+            <div className={styles.filters}>
+                {STATUS_OPTIONS.map((opt) => (
+                    <button
+                        key={opt.value}
+                        type="button"
+                        className={
+                            opt.value === statusFilter
+                                ? styles.filterButton_active
+                                : styles.filterButton
+                        }
+                        onClick={() => setStatusFilter(opt.value)}
                     >
-                        Создать раунд
-                    </Button>
-                </div>
+                        {opt.label}
+                    </button>
+                ))}
+            </div>
+
+            {roundsPending && <div>Загрузка…</div>}
+            {roundsError && (
+                <div className={styles.error}>Не удалось загрузить раунды</div>
             )}
 
-            {isLoading && <div>Загрузка…</div>}
-            {error && <div className={styles.error}>Ошибка загрузки раундов</div>}
+            {!roundsPending && !rounds.length && (
+                <div className={styles.empty}>Раундов пока нет</div>
+            )}
 
             <div className={styles.list}>
-                {data?.map((round) => (
+                {rounds.map((round) => (
                     <RoundCard key={round.id} round={round} />
                 ))}
             </div>
+
+            {hasNextPage && (
+                <div className={styles.loadMoreWrapper}>
+                    <Button
+                        variant="default"
+                        onClick={() => fetchNextPage()}
+                        disabled={isFetchingNextPage}
+                    >
+                        {isFetchingNextPage ? 'Загрузка…' : 'Загрузить ещё'}
+                    </Button>
+                </div>
+            )}
         </div>
     );
 }

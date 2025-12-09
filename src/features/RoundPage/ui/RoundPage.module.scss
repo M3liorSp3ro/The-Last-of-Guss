@@ -1,38 +1,34 @@
-.container {
-    padding: 8px 0;
-}
-
-.content {
-    display: flex;
-    gap: 24px;
-}
-
 .gooseCard {
-    flex: 0 0 320px;
-    border: 1px dashed var(--border);
-    padding: 16px;
-    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+    border: 1px dashed #000;
+    max-width: 360px;
+    margin: 0 auto;
 }
 
 .gooseBox {
+    width: 200px;
     height: 200px;
-    margin-bottom: 24px;
-    background: #ddd;
+    border: 1px dashed #333;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    user-select: none;
+
+    cursor: pointer;
+    margin-bottom: 20px;
 }
 
 .gooseBox_active {
-    cursor: pointer;
+    background: rgba(0, 200, 0, 0.1);
 }
 
 .statsRow {
-    margin-bottom: 4px;
-}
-
-.rightText {
-    font-size: 14px;
-    color: #555;
+    margin: 4px 0;
+    text-align: center;
 }

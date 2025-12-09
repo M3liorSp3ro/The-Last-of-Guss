@@ -1,12 +1,11 @@
-// src/app/providers/AuthProvider.tsx
-import type { User } from '@/shared/api/auth';
 import { getMe } from '@/shared/api/auth';
+import { User } from '@/shared/types/auth';
 import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 interface AuthContextValue {
     user: User | null;
-    isReady: boolean;          // 👈 добавили
+    isReady: boolean;
     login: (token: string, user: User) => void;
     logout: () => void;
 }
@@ -15,7 +14,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
-    const [isReady, setIsReady] = useState(false); // 👈 изначально не готовы
+    const [isReady, setIsReady] = useState(false);
 
     const loginFn = (token: string, user: User) => {
         localStorage.setItem('token', token);
@@ -34,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            setIsReady(true); // токена нет — просто считаем, что auth инициализирован
+            setIsReady(true);
             return;
         }
 

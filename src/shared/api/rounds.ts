@@ -1,43 +1,58 @@
-import { api } from './client';
+// src/shared/api/rounds.ts
+import { api } from '@/shared/api/client';
+import { BackendRoundCore, BackendRoundDetailsResponse, CreateRoundResponse, GetRoundsParams, RoundDetails, RoundsListResponse, RoundStatus, TapResponse } from '../types/rounds';
 
-export type RoundStatus = 'active' | 'cooldown' | 'finished' | 'scheduled';
-
-export interface Round {
-    id: string;
-    status: RoundStatus;
-    startTime: string;
-    endTime: string;
-}
-
-export interface RoundListItem extends Round { }
-
-export interface RoundDetails extends Round {
-    totalPoints: number;
-    myPoints: number;
-    winnerName: string | null;
-    winnerPoints: number | null;
-}
-
-// GET список раундов
-export async function getRounds(): Promise<RoundListItem[]> {
-    const { data } = await api.get<RoundListItem[]>('/api/rounds');
+export async function getRounds(params?: GetRoundsParams): Promise<RoundsListResponse> {
+    const { data } = await api.get<RoundsListResponse>('/rounds', { params });
     return data;
 }
 
-// POST создать раунд (админ)
-export async function createRound(): Promise<RoundDetails> {
-    const { data } = await api.post<RoundDetails>('/api/rounds');
+export async function createRound(): Promise<CreateRoundResponse> {
+    const { data } = await api.post<CreateRoundResponse>('/rounds');
     return data;
 }
 
-// GET детали раунда
+// вычисляем статус по времени
+function calculateStatus(round: BackendRoundCore, now: number = Date.now()): RoundStatus {
+    const start = new Date(round.startTime).getTime();
+    const end = new Date(round.endTime).getTime();
+
+    if (now < start) return 'cooldown';
+    if (now >= start && now <= end) return 'active';
+    return 'finished';
+}
+
+function mapBackendToRoundDetails(payload: BackendRoundDetailsResponse): RoundDetails {
+    const { round, topStats, myStats } = payload;
+
+    const status = calculateStatus(round);
+    const winner = topStats[0];
+
+    return {
+        id: round.id,
+        startTime: round.startTime,
+        endTime: round.endTime,
+        createdAt: round.createdAt,
+        totalScore: round.totalScore,
+
+        status,
+
+        myScore: myStats.score,
+        myTaps: myStats.taps,
+
+        topStats,
+        winnerName: winner?.user.username,
+        winnerScore: winner?.score,
+    };
+}
+
 export async function getRound(id: string): Promise<RoundDetails> {
-    const { data } = await api.get<RoundDetails>(`/api/rounds/${id}`);
+    const { data } = await api.get<BackendRoundDetailsResponse>(`/rounds/${id}`);
+    return mapBackendToRoundDetails(data);
+}
+
+export async function tapGoose(id: string): Promise<TapResponse> {
+    const { data } = await api.post<TapResponse>(`/rounds/${id}/tap`);
     return data;
 }
 
-// POST тап по гусю
-export async function tapGoose(id: string): Promise<RoundDetails> {
-    const { data } = await api.post<RoundDetails>(`/api/rounds/${id}/tap`);
-    return data;
-}
