@@ -19,17 +19,17 @@ export function LoginPage() {
 
   return (
     <div className={styles.wrapper}>
-      <h2 className={styles.title}>Войти</h2>
+      <h2 className={styles.title}>Login</h2>
 
       <form onSubmit={handleSubmit}>
         <Input
-          label="Имя пользователя:"
+          label="Name:"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
 
         <Input
-          label="Пароль:"
+          label="Password:"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -37,7 +37,7 @@ export function LoginPage() {
 
         <div className={styles.buttonRow}>
           <Button type="submit" variant="primary" disabled={isPending}>
-            Войти
+            Login
           </Button>
         </div>
 

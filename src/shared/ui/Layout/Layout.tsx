@@ -26,12 +26,12 @@ export function Layout() {
                 <span>
                     {user && (
                         <>
-                            Имя игрока: <b>{user.username}</b>{' '}
+                            Player name: <b>{user.username}</b>{' '}
                             <Button
                                 style={{ marginLeft: 8 }}
                                 onClick={() => mutation.mutate()}
                             >
-                                Выйти
+                                Logout
                             </Button>
                         </>
                     )}

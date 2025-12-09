@@ -1,3 +1,6 @@
+import goose1 from '@/shared/assets/first-step.webp';
+import goose2 from '@/shared/assets/second-step.webp';
+import goose3 from '@/shared/assets/third-step.webp';
 import { RoundDetails } from "@/shared/types/rounds";
 import { ClientStatus } from "../types";
 
@@ -25,12 +28,12 @@ export function getTimer(round: RoundDetails, nowMs: number) {
 
     if (status === 'active') {
         const diff = end - nowMs;
-        return { label: 'До конца осталось', value: formatDiff(diff) };
+        return { label: 'Its still until the end', value: formatDiff(diff) };
     }
 
     if (status === 'cooldown') {
         const diff = start - nowMs;
-        return { label: 'до начала раунда', value: formatDiff(diff) };
+        return { label: 'before the start of the round', value: formatDiff(diff) };
     }
 
     return { label: '', value: '' };
@@ -47,4 +50,10 @@ export function getStatusTitle(status?: ClientStatus) {
         default:
             return 'Раунд';
     }
+}
+
+export function getGooseImage(taps: number): string {
+    if (taps < 20) return goose1;
+    if (taps < 50) return goose2;
+    return goose3; // 50+
 }

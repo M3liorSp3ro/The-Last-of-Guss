@@ -1,8 +1,8 @@
 import { StatusFilter } from "../types";
 
 export const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
-    { value: 'all', label: 'Все' },
-    { value: 'active', label: 'Активные' },
+    { value: 'all', label: 'Everyone' },
+    { value: 'active', label: 'Active' },
     { value: 'cooldown', label: 'Cooldown' },
-    { value: 'finished', label: 'Завершённые' },
+    { value: 'finished', label: 'Finished' },
 ];

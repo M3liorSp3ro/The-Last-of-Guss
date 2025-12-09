@@ -28,11 +28,11 @@ export function RoundsListPage() {
     return (
         <div className={styles.container}>
             <div className={styles.header}>
-                <span>Список РАУНДОВ</span>
+                <span>List of ROUNDS</span>
                 <span className={styles.headerRight}>
                     {user && (
                         <span>
-                            Имя игрока: <b>{user.username}</b>
+                            Player name: <b>{user.username}</b>
                         </span>
                     )}
                     {user?.isAdmin && (
@@ -41,7 +41,7 @@ export function RoundsListPage() {
                             onClick={create}
                             disabled={createPending}
                         >
-                            Создать раунд
+                            Create a round
                         </Button>
                     )}
                 </span>
@@ -64,13 +64,13 @@ export function RoundsListPage() {
                 ))}
             </div>
 
-            {roundsPending && <div>Загрузка…</div>}
+            {roundsPending && <div>Loading...</div>}
             {roundsError && (
-                <div className={styles.error}>Не удалось загрузить раунды</div>
+                <div className={styles.error}>Couldn't load rounds</div>
             )}
 
             {!roundsPending && !rounds.length && (
-                <div className={styles.empty}>Раундов пока нет</div>
+                <div className={styles.empty}>There are no rounds yet</div>
             )}
 
             <div className={styles.list}>
@@ -86,7 +86,7 @@ export function RoundsListPage() {
                         onClick={() => fetchNextPage()}
                         disabled={isFetchingNextPage}
                     >
-                        {isFetchingNextPage ? 'Загрузка…' : 'Загрузить ещё'}
+                        {isFetchingNextPage ? 'Loading...' : 'Load more'}
                     </Button>
                 </div>
             )}

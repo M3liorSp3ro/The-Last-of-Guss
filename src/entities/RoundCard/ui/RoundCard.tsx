@@ -20,7 +20,7 @@ export function RoundCard({ round }: { round: RoundListItem }) {
                     End:&nbsp;&nbsp;{new Date(round.endTime).toLocaleString()}
                 </div>
                 <hr className={styles.divider} />
-                <div className={styles.status}>Статус: {mapStatus(round.status)}</div>
+                <div className={styles.status}>Status: {mapStatus(round.status)}</div>
             </div>
         </Link>
     );

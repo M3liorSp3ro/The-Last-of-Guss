@@ -6,8 +6,10 @@ import { useMutation } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+
 import { useRound } from '../hooks';
-import { getStatusTitle } from '../utils';
+import { getGooseImage, getStatusTitle } from '../utils';
+
 import styles from './RoundPage.module.scss';
 
 export function RoundPage() {
@@ -29,22 +31,20 @@ export function RoundPage() {
         refetch,
     } = useRound(id);
 
-
     const isFinished = clientStatus === 'finished';
     const isActive = clientStatus === 'active';
     const isCooldown = clientStatus === 'cooldown';
 
-
+    // выбираем подходящее изображение
+    const gooseImage = getGooseImage(localScore);
 
     const { mutate: tapMutation, isError: tapError } = useMutation<TapResponse>({
         mutationFn: () => tapGoose(id),
         onSuccess: (data) => {
-            // серверный результат подравниваем локальные значения
             setLocalScore(data.score);
         },
     });
 
-    // клики разрещены, пока раунд активен
     const canTap = Boolean(isActive);
 
     const handleTap = () => {
@@ -55,32 +55,32 @@ export function RoundPage() {
         tapMutation();
     };
 
-    // при первом получении раунда синхронизируем локальные очки
     useEffect(() => {
         if (round) {
             setLocalScore(round.myScore);
         }
     }, [round]);
 
-    // когда раунд впервые стал finished один раз подтягиваем финальную статистику
     useEffect(() => {
         if (!round) return;
+
         if (!isFinished) {
             setFinishRefetched(false);
             return;
         }
+
         if (finishRefetched) return;
 
         setFinishRefetched(true);
-        refetch(); // подтягиваем totalScore, winner и тд
+        refetch(); // подгружаем totalScore, winner и т.д.
     }, [isFinished, finishRefetched, refetch, round]);
 
     if (roundPending || !round) {
-        return <div className={styles.container}>Загрузка…</div>;
+        return <div className={styles.container}>Loading...</div>;
     }
 
     if (roundError) {
-        return <div className={styles.container}>Не удалось загрузить раунд</div>;
+        return <div className={styles.container}>Couldn't load round</div>;
     }
 
     return (
@@ -91,6 +91,8 @@ export function RoundPage() {
 
             <div className={styles.content}>
                 <div className={styles.gooseCard}>
+
+                    {/* Картинка гуся */}
                     <div
                         className={clsx(
                             styles.gooseBox,
@@ -98,18 +100,24 @@ export function RoundPage() {
                         )}
                         onClick={handleTap}
                     >
-                        {canTap ? 'Тапни по гусю!' : 'Гусь недоступен'}
+                        <img
+                            src={gooseImage}
+                            alt="Goose"
+                            className={styles.gooseImage}
+                        />
                     </div>
+                    <p className={styles.gooseTapTitle}>TAP THE GUSSSSSSSSSSSSS</p>
+
 
                     {/* === ACTIVE === */}
                     {isActive && (
                         <>
-                            <div className={styles.statsRow}>Раунд активен!</div>
+                            <div className={styles.statsRow}>The round is active!</div>
                             <div className={styles.statsRow}>
                                 {timer.label}: {timer.value}
                             </div>
                             <div className={styles.statsRow}>
-                                Мои очки - {localScore}
+                                My points – {localScore}
                             </div>
                         </>
                     )}
@@ -129,21 +137,23 @@ export function RoundPage() {
                         <>
                             <hr style={{ margin: '12px 0' }} />
                             <div className={styles.statsRow}>
-                                Всего&nbsp; {round.totalScore}
+                                Total – {round.totalScore}
                             </div>
+
                             {round.winnerName && (
                                 <div className={styles.statsRow}>
-                                    Победитель - {round.winnerName}&nbsp; {round.winnerScore}
+                                    Winner – {round.winnerName} {round.winnerScore}
                                 </div>
                             )}
+
                             <div className={styles.statsRow}>
-                                Мои очки&nbsp; {localScore}
+                                My points – {localScore}
                             </div>
                         </>
                     )}
 
                     {tapError && (
-                        <div className={styles.error}>Не удалось отправить тап</div>
+                        <div className={styles.error}>Couldn't send a tap</div>
                     )}
                 </div>
             </div>
