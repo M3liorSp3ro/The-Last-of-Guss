@@ -10,4 +10,5 @@ export default defineConfig({
       projects: ['./tsconfig.app.json'], // 🔽 важная строка
     }),
   ],
+  base: '/The-Last-of-Guss/',
 });

@@ -46,4 +46,8 @@ export const router = createBrowserRouter([
             { path: '*', element: <Navigate to="/rounds" replace /> },
         ],
     },
-]);
+],
+    {
+        basename: import.meta.env.BASE_URL
+    }
+);
