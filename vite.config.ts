@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     tsconfigPaths({
-      projects: ['./tsconfig.app.json'], // 🔽 важная строка
+      projects: ['./tsconfig.app.json'],
     }),
   ],
   base: '/The-Last-of-Guss/',
