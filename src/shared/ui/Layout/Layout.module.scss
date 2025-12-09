@@ -1,0 +1,21 @@
+.root {
+    max-width: 960px;
+    margin: 32px auto;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 1px dashed var(--border);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #000;
+    padding-bottom: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.playerName {
+    font-weight: 600;
+}

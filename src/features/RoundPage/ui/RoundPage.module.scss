@@ -1,0 +1,38 @@
+.container {
+    padding: 8px 0;
+}
+
+.content {
+    display: flex;
+    gap: 24px;
+}
+
+.gooseCard {
+    flex: 0 0 320px;
+    border: 1px dashed var(--border);
+    padding: 16px;
+    font-size: 14px;
+}
+
+.gooseBox {
+    height: 200px;
+    margin-bottom: 24px;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.gooseBox_active {
+    cursor: pointer;
+}
+
+.statsRow {
+    margin-bottom: 4px;
+}
+
+.rightText {
+    font-size: 14px;
+    color: #555;
+}

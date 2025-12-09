@@ -1,0 +1,18 @@
+.container {
+    padding: 8px 0;
+}
+
+.createWrapper {
+    margin-bottom: 16px;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.error {
+    color: var(--error);
+    margin-top: 8px;
+}

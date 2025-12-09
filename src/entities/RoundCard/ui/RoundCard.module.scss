@@ -1,0 +1,19 @@
+.card {
+    border: 1px dashed var(--border);
+    padding: 16px;
+    font-size: 14px;
+}
+
+.row {
+    margin-bottom: 4px;
+}
+
+.divider {
+    border: none;
+    border-top: 1px solid #000;
+    margin: 12px 0;
+}
+
+.status {
+    font-weight: 500;
+}
