@@ -2,7 +2,8 @@ name: Deploy Vite app to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -26,7 +27,7 @@ jobs:
           node-version: 20
           cache: yarn
 
-      - name: Install deps
+      - name: Install dependencies
         run: yarn install --frozen-lockfile
 
       - name: Build
